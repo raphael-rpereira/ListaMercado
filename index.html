@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Lista de Compras"/>
+<title>Lista de Compras</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f4f0;color:#1a1a1a;min-height:100vh;font-size:15px}
+.app{max-width:500px;margin:0 auto;padding-bottom:80px}
+.header{background:#fff;border-bottom:1px solid #e8e8e4;padding:14px 16px;position:sticky;top:0;z-index:20;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.header h1{font-size:18px;font-weight:600;color:#1a1a1a}
+.header p{font-size:12px;color:#888;margin-top:2px}
+.tabs{display:flex;background:#fff;border-bottom:1px solid #e8e8e4;position:sticky;top:57px;z-index:19}
+.tab{flex:1;padding:12px 4px;font-size:12px;font-weight:600;border:none;background:none;cursor:pointer;color:#888;border-bottom:2.5px solid transparent;transition:all .2s}
+.tab.active{color:#1D9E75;border-bottom-color:#1D9E75}
+.panel{display:none;padding:14px;gap:12px;flex-direction:column}
+.panel.active{display:flex}
+.card{background:#fff;border:1px solid #e8e8e4;border-radius:14px;padding:16px}
+textarea{width:100%;padding:11px 13px;border:1.5px solid #d8d8d4;border-radius:10px;background:#fafaf8;color:#1a1a1a;font-size:14px;font-family:inherit;resize:vertical;outline:none;line-height:1.6}
+textarea:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+input[type=text],input[type=number]{padding:10px 13px;border:1.5px solid #d8d8d4;border-radius:10px;background:#fafaf8;color:#1a1a1a;font-size:14px;outline:none;font-family:inherit}
+input:focus{border-color:#1D9E75;box-shadow:0 0 0 3px rgba(29,158,117,.1)}
+select{padding:10px 10px;border:1.5px solid #d8d8d4;border-radius:10px;background:#fafaf8;color:#1a1a1a;font-size:13px;outline:none;font-family:inherit}
+.btn{padding:11px 18px;border-radius:10px;border:1.5px solid #d8d8d4;background:#fff;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.btn-green{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.btn-green:active{background:#0F6E56}
+.btn-amber{background:#EF9F27;color:#fff;border-color:#EF9F27}
+.btn-red{background:#E24B4A;color:#fff;border-color:#E24B4A;font-size:12px;padding:8px 12px}
+.add-row{display:flex;gap:8px;align-items:center}
+.section-lbl{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px}
+.item-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#fafaf8;border-radius:10px;border:1px solid #ebebeb;margin-bottom:6px}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.item-name{flex:1;font-size:13px;font-weight:500}
+.cat-pill{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap}
+.del-btn{background:none;border:none;cursor:pointer;font-size:18px;color:#bbb;padding:0 2px;line-height:1}
+.cat-group{margin-bottom:14px}
+.cat-header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px 12px 0 0;font-size:13px;font-weight:700}
+.cat-items{border:1px solid #e8e8e4;border-radius:0 0 12px 12px;overflow:hidden}
+.check-row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-top:1px solid #ebebeb;background:#fff;cursor:pointer;transition:background .15s}
+.check-row:first-child{border-top:none}
+.check-row:active{background:#f4f4f0}
+.check-row.done{opacity:.4}
+.check-row input[type=checkbox]{width:20px;height:20px;accent-color:#1D9E75;cursor:pointer;flex-shrink:0}
+.cname{flex:1;font-size:14px}
+.done .cname{text-decoration:line-through;color:#aaa}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:#fff;border:1px solid #e8e8e4;border-radius:12px;padding:12px;text-align:center}
+.stat .num{font-size:24px;font-weight:700;color:#1D9E75}
+.stat .lbl{font-size:11px;color:#888;margin-top:3px}
+.progress-bar{height:6px;background:#e8e8e4;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:#1D9E75;border-radius:3px;transition:width .4s}
+.empty{text-align:center;padding:32px 16px;color:#aaa;font-size:14px}
+.preview-row{display:flex;align-items:center;gap:8px;padding:9px 11px;background:#fafaf8;border-radius:10px;border:1px solid #ebebeb;margin-bottom:6px}
+.preview-name{flex:1;font-size:13px;font-weight:500}
+.spinner{display:inline-block;width:16px;height:16px;border:2.5px solid #EF9F27;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.share-box{background:#fafaf8;border:1px solid #e8e8e4;border-radius:10px;padding:12px;font-size:12px;word-break:break-all;color:#555;max-height:80px;overflow-y:auto;margin-top:8px}
+.import-banner{background:#E1F5EE;border:1px solid #5DCAA5;border-radius:14px;padding:16px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>Lista de Compras</h1>
+    <p id="hsub">Adicione itens ou cole uma lista completa</p>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="sw('editar')">Editar lista</button>
+    <button class="tab" onclick="sw('comprar')">Fazer compras</button>
+    <button class="tab" onclick="sw('compartilhar')">Compartilhar</button>
+  </div>
+
+  <div id="panel-editar" class="panel active">
+    <div class="card">
+      <div class="section-lbl">Colar lista completa — IA categoriza automaticamente</div>
+      <textarea id="bulk-input" rows="5" placeholder="Cole sua lista aqui, um item por linha ou separados por vírgula:
+
+leite, ovos, arroz
+frango
+detergente
+maçã, banana, laranja"></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <button class="btn btn-amber" onclick="processarLista()" style="flex:1" id="btn-ia">Categorizar com IA</button>
+        <div id="ia-status" style="display:none;align-items:center;gap:6px">
+          <div class="spinner"></div>
+          <span style="font-size:12px;color:#888">Analisando...</span>
+        </div>
+      </div>
+      <div id="preview-area" style="display:none;margin-top:16px">
+        <div class="section-lbl" style="margin-bottom:10px">Confirmar antes de adicionar — ajuste se necessário</div>
+        <div id="preview-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" onclick="cancelarPreview()" style="flex:1">Cancelar</button>
+          <button class="btn btn-green" onclick="confirmarLista()" style="flex:1">Adicionar tudo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-lbl">Adicionar item manualmente</div>
+      <div class="add-row">
+        <input type="text" id="item-input" placeholder="Nome do item" style="flex:1" onkeydown="if(event.key==='Enter')addItem()"/>
+        <select id="cat-sel" style="max-width:130px"></select>
+      </div>
+      <div class="add-row" style="margin-top:8px">
+        <input type="number" id="qty-in" value="1" min="1" style="width:64px"/>
+        <input type="text" id="unit-in" placeholder="kg / un / L" style="width:80px"/>
+        <button class="btn btn-green" onclick="addItem()" style="margin-left:auto">+ Adicionar</button>
+      </div>
+    </div>
+
+    <div id="edit-card" class="card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="section-lbl" style="margin:0">Itens na lista</div>
+        <button class="btn btn-red" onclick="clearAll()">Limpar tudo</button>
+      </div>
+      <div id="edit-list"></div>
+    </div>
+  </div>
+
+  <div id="panel-comprar" class="panel">
+    <div class="stats">
+      <div class="stat"><div class="num" id="st-tot">0</div><div class="lbl">total</div></div>
+      <div class="stat"><div class="num" id="st-done">0</div><div class="lbl">no carrinho</div></div>
+      <div class="stat"><div class="num" id="st-pct">0%</div><div class="lbl">concluído</div></div>
+    </div>
+    <div class="progress-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    <div id="shop-list"></div>
+    <button class="btn" onclick="resetChecks()" style="width:100%;padding:13px;margin-top:4px">Reiniciar marcações</button>
+  </div>
+
+  <div id="panel-compartilhar" class="panel">
+    <div id="import-banner" class="import-banner" style="display:none">
+      <div style="font-size:14px;font-weight:700;color:#085041;margin-bottom:4px">Lista recebida com sucesso!</div>
+      <p style="font-size:13px;color:#0F6E56">Vá para "Fazer compras" e marque os itens conforme coloca no carrinho.</p>
+    </div>
+    <div class="card">
+      <div class="section-lbl">Compartilhar lista</div>
+      <p style="font-size:13px;color:#888;margin-bottom:14px">Gere um link com a lista atual. Abra o arquivo HTML nos dois celulares e use o link para passar a lista de um para o outro.</p>
+      <button class="btn btn-green" onclick="gerarLink()" style="width:100%">Gerar link de compartilhamento</button>
+      <div id="share-out" style="display:none">
+        <div class="share-box" id="share-url"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-green" onclick="copyLink()" style="flex:1">Copiar link</button>
+          <button class="btn" onclick="shareWhatsApp()" style="flex:1;background:#25D366;color:#fff;border-color:#25D366">WhatsApp</button>
+        </div>
+        <p style="font-size:11px;color:#aaa;margin-top:8px;text-align:center">A outra pessoa deve abrir o link no mesmo arquivo HTML salvo no celular dela</p>
+      </div>
+    </div>
+    <div class="card" style="background:#fffbf0;border-color:#EF9F27">
+      <div class="section-lbl" style="color:#BA7517">Como usar o compartilhamento</div>
+      <ol style="font-size:13px;color:#633806;line-height:2;padding-left:18px">
+        <li>Salve este arquivo HTML nos dois celulares</li>
+        <li>Monte a lista em um celular</li>
+        <li>Gere o link e envie pelo WhatsApp</li>
+        <li>No outro celular, abra o link no navegador</li>
+        <li>Copie o conteúdo após <code>?lista=</code> e cole em:<br><strong>Menu → Importar lista</strong></li>
+      </ol>
+      <button class="btn btn-amber" onclick="showImport()" style="width:100%;margin-top:12px">Importar lista (colar código)</button>
+      <div id="import-area" style="display:none;margin-top:12px">
+        <textarea id="import-input" rows="3" placeholder="Cole aqui o código da lista recebida..."></textarea>
+        <button class="btn btn-green" onclick="importarLista()" style="width:100%;margin-top:8px">Importar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CATS=[
+  {id:'frutas',    label:'Frutas',               color:'#639922',bg:'#EAF3DE',text:'#27500A'},
+  {id:'verduras',  label:'Verduras e legumes',    color:'#1D9E75',bg:'#E1F5EE',text:'#085041'},
+  {id:'carnes',    label:'Carnes e aves',         color:'#D85A30',bg:'#FAECE7',text:'#4A1B0C'},
+  {id:'peixe',     label:'Peixe e frutos do mar', color:'#185FA5',bg:'#E6F1FB',text:'#042C53'},
+  {id:'laticinios',label:'Laticínios e ovos',     color:'#BA7517',bg:'#FAEEDA',text:'#412402'},
+  {id:'graos',     label:'Grãos e cereais',       color:'#7F77DD',bg:'#EEEDFE',text:'#26215C'},
+  {id:'bebidas',   label:'Bebidas',               color:'#378ADD',bg:'#E6F1FB',text:'#042C53'},
+  {id:'limpeza',   label:'Limpeza e higiene',     color:'#D4537E',bg:'#FBEAF0',text:'#4B1528'},
+  {id:'congelados',label:'Congelados',            color:'#5DCAA5',bg:'#E1F5EE',text:'#04342C'},
+  {id:'padaria',   label:'Padaria e frios',       color:'#EF9F27',bg:'#FAEEDA',text:'#633806'},
+  {id:'mercearia', label:'Mercearia e temperos',  color:'#993C1D',bg:'#FAECE7',text:'#4A1B0C'},
+  {id:'outros',    label:'Outros',                color:'#888780',bg:'#F1EFE8',text:'#2C2C2A'},
+];
+
+const DICT={
+  frutas:['maçã','maca','banana','laranja','uva','pera','manga','abacaxi','morango','melão','melancia','mamão','limão','kiwi','ameixa','cereja','framboesa','mirtilo','abacate','coco','figo','damasco','pêssego','nectarina','tangerina','mexerica','goiaba','pitaya','acerola','caju','graviola','cupuaçu','açaí','fruta'],
+  verduras:['alface','couve','espinafre','rúcula','rucula','agrião','repolho','brócolis','brocolis','couve-flor','acelga','beterraba','cenoura','batata','inhame','cebola','alho','tomate','pimentão','abobrinha','pepino','berinjela','jiló','quiabo','chuchu','vagem','ervilha','milho','aspargo','aipo','nabo','rabanete','mandioca','mandioquinha','salsa','coentro','hortelã','manjericão','alecrim','cebolinha','gengibre','verdura','legume','batata-doce'],
+  carnes:['frango','carne','bife','picanha','alcatra','filé','file','costela','linguiça','linguica','salsicha','bacon','presunto','coxa','sobrecoxa','pernil','lombo','bisteca','patinho','acém','acem','músculo','musculo','maminha','coxão','contrafilé','cupim','pato','peru','cordeiro','carneiro','porco','suíno','bovino','carne moída','fraldinha','asa','peito'],
+  peixe:['peixe','salmão','salmao','atum','sardinha','tilápia','tilapia','merluza','bacalhau','camarão','camarao','lagosta','polvo','lula','ostra','mexilhão','mexilhao','mariscos','robalo','dourado','tambaqui'],
+  laticinios:['leite','queijo','iogurte','manteiga','creme de leite','requeijão','requeijao','ricota','muçarela','mucarela','parmesão','parmesao','gorgonzola','brie','catupiry','coalhada','nata','ovo','ovos'],
+  graos:['arroz','feijão','feijao','lentilha','grão de bico','grao de bico','aveia','quinoa','trigo','fubá','fuba','farinha','tapioca','macarrão','macarrao','espaguete','penne','lasanha','massa','granola','cereal','chia','linhaça','linhaca','gergelim','amido','farelo'],
+  bebidas:['água','agua','suco','refrigerante','cerveja','vinho','néctar','nectar','isotônico','isotonico','energético','energetico','café','cafe','chá','cha','achocolatado','coca','pepsi','fanta','sprite','guaraná','guarana','leite de caixinha','leite longa vida'],
+  limpeza:['sabão','sabao','detergente','desinfetante','sanitária','sanitaria','alvejante','amaciante','esponja','bucha','papel higiênico','papel higienico','papel toalha','guardanapo','absorvente','fralda','shampoo','condicionador','sabonete','creme dental','pasta de dente','escova','fio dental','desodorante','perfume','hidratante','protetor solar','limpeza','multiuso'],
+  congelados:['sorvete','pizza congelada','lasanha congelada','nuggets','hambúrguer congelado','batata frita congelada','pão de queijo congelado','congelado'],
+  padaria:['pão','pao','baguete','croissant','bolo','torta','biscoito','bolacha','cookie','wafer','rosca','panetone','broa','pão francês','pão de queijo','pão integral','brioche','cream cracker','wrap','mortadela','salame','peito de peru','queijo fatiado'],
+  mercearia:['azeite','óleo','oleo','vinagre','molho de tomate','extrato de tomate','catchup','ketchup','mostarda','maionese','molho','sal','açúcar','acucar','pimenta','canela','orégano','oregano','cominho','curry','colorau','tempero','caldo','mel','geleia','doce','nutella','amendoim','castanha','nozes','chocolate','cacau','fermento','bicarbonato','maizena','leite condensado','leite em pó','extrato'],
+};
+
+let items=[], checked={}, previewItems=[];
+
+function catById(id){return CATS.find(c=>c.id===id)||CATS[CATS.length-1]}
+
+function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+
+function autoCategoria(nome){
+  const n=norm(nome);
+  for(const [cat,words] of Object.entries(DICT)){
+    for(const w of words){
+      const wn=norm(w);
+      if(n.includes(wn)||wn===n)return cat;
+    }
+  }
+  return 'outros';
+}
+
+function buildSel(id){
+  const s=document.getElementById(id);if(!s||s.children.length)return;
+  CATS.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.label;s.appendChild(o)});
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+async function processarLista(){
+  const txt=document.getElementById('bulk-input').value.trim();
+  if(!txt){showToast('Cole uma lista primeiro');return}
+  document.getElementById('btn-ia').disabled=true;
+  const st=document.getElementById('ia-status');st.style.display='flex';
+  document.getElementById('preview-area').style.display='none';
+  const linhas=txt.split(/[\n,;]+/).map(l=>l.trim()).filter(l=>l.length>1);
+  if(!linhas.length){document.getElementById('btn-ia').disabled=false;st.style.display='none';return}
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`Você categoriza itens de supermercado. Categorias: frutas, verduras, carnes, peixe, laticinios, graos, bebidas, limpeza, congelados, padaria, mercearia, outros. Responda APENAS com JSON válido sem markdown: [{"nome":"item","categoria":"id","qty":1,"unit":"un"}]. Corrija ortografia. qty padrão 1.`,
+        messages:[{role:'user',content:'Categorize:\n'+linhas.join('\n')}]
+      })
+    });
+    const data=await resp.json();
+    const raw=data.content[0].text.replace(/```json|```/g,'').trim();
+    previewItems=JSON.parse(raw);
+  }catch(e){
+    previewItems=linhas.map(l=>({nome:l,categoria:autoCategoria(l),qty:1,unit:'un'}));
+  }
+  document.getElementById('btn-ia').disabled=false;st.style.display='none';
+  renderPreview();
+}
+
+function renderPreview(){
+  const area=document.getElementById('preview-area');
+  const list=document.getElementById('preview-list');list.innerHTML='';
+  previewItems.forEach((item,i)=>{
+    const cat=catById(item.categoria);
+    const row=document.createElement('div');row.className='preview-row';
+    row.innerHTML=`<div class="dot" style="background:${cat.color}"></div>
+    <span class="preview-name">${item.nome}</span>
+    <select onchange="previewItems[${i}].categoria=this.value;renderPreview()" style="font-size:12px">
+    ${CATS.map(c=>`<option value="${c.id}"${c.id===item.categoria?' selected':''}>${c.label}</option>`).join('')}
+    </select>
+    <button class="del-btn" onclick="previewItems.splice(${i},1);renderPreview()">×</button>`;
+    list.appendChild(row);
+  });
+  area.style.display='';
+}
+
+function cancelarPreview(){document.getElementById('preview-area').style.display='none';previewItems=[]}
+
+function confirmarLista(){
+  previewItems.forEach(p=>{
+    items.push({id:Date.now()+Math.random(),name:p.nome,cat:p.categoria,qty:p.qty||1,unit:p.unit||''});
+  });
+  previewItems=[];
+  document.getElementById('bulk-input').value='';
+  document.getElementById('preview-area').style.display='none';
+  save();renderAll();showToast('Itens adicionados com sucesso!');
+}
+
+function addItem(){
+  const inp=document.getElementById('item-input');
+  const name=inp.value.trim();if(!name)return;
+  const cat=document.getElementById('cat-sel').value;
+  const qty=parseFloat(document.getElementById('qty-in').value)||1;
+  const unit=document.getElementById('unit-in').value.trim();
+  items.push({id:Date.now(),name,cat,qty,unit});
+  inp.value='';document.getElementById('qty-in').value='1';document.getElementById('unit-in').value='';
+  inp.focus();save();renderAll();
+}
+
+function delItem(id){items=items.filter(i=>i.id!==id);delete checked[id];save();renderAll()}
+function clearAll(){if(confirm('Limpar toda a lista?')){items=[];checked={};save();renderAll()}}
+function resetChecks(){checked={};save();renderAll();showToast('Marcações reiniciadas')}
+function toggleCheck(id,val){checked[id]=val;save();renderAll()}
+
+function save(){
+  try{localStorage.setItem('sm_items',JSON.stringify(items));localStorage.setItem('sm_chk',JSON.stringify(checked))}catch(e){}
+}
+function load(){
+  try{
+    const i=localStorage.getItem('sm_items');const c=localStorage.getItem('sm_chk');
+    if(i)items=JSON.parse(i);if(c)checked=JSON.parse(c);
+  }catch(e){}
+}
+
+function renderAll(){
+  renderEdit();renderShop();
+  const tot=items.length,done=Object.values(checked).filter(Boolean).length;
+  document.getElementById('hsub').textContent=tot===0?'Adicione itens ou cole uma lista completa':`${tot} item${tot!==1?'s':''} · ${done} no carrinho`;
+}
+
+function renderEdit(){
+  const list=document.getElementById('edit-list');
+  const card=document.getElementById('edit-card');
+  if(!items.length){card.style.display='none';return}
+  card.style.display='';list.innerHTML='';
+  items.forEach(item=>{
+    const cat=catById(item.cat);
+    const row=document.createElement('div');row.className='item-row';
+    row.innerHTML=`<div class="dot" style="background:${cat.color}"></div>
+    <span class="item-name">${item.name}${item.qty?' <span style="font-size:11px;color:#999">'+item.qty+(item.unit?' '+item.unit:'')+'</span>':''}</span>
+    <span class="cat-pill" style="background:${cat.bg};color:${cat.text}">${cat.label}</span>
+    <button class="del-btn" onclick="delItem(${item.id})">×</button>`;
+    list.appendChild(row);
+  });
+}
+
+function renderShop(){
+  const sl=document.getElementById('shop-list');
+  const tot=items.length,done=Object.values(checked).filter(Boolean).length;
+  document.getElementById('st-tot').textContent=tot;
+  document.getElementById('st-done').textContent=done;
+  document.getElementById('st-pct').textContent=tot?Math.round(done/tot*100)+'%':'0%';
+  document.getElementById('prog').style.width=tot?Math.round(done/tot*100)+'%':'0%';
+  if(!tot){sl.innerHTML='<div class="empty">Nenhum item ainda.<br>Adicione na aba "Editar lista".</div>';return}
+  const groups={};CATS.forEach(c=>{groups[c.id]=[]});
+  items.forEach(item=>{const cid=item.cat||'outros';if(!groups[cid])groups[cid]=[];groups[cid].push(item)});
+  sl.innerHTML='';
+  CATS.forEach(cat=>{
+    const grp=groups[cat.id];if(!grp||!grp.length)return;
+    const div=document.createElement('div');div.className='cat-group';
+    const hdr=document.createElement('div');hdr.className='cat-header';
+    hdr.style.background=cat.bg;hdr.style.color=cat.text;
+    hdr.innerHTML=`<div style="width:12px;height:12px;border-radius:50%;background:${cat.color}"></div><span>${cat.label}</span><span style="margin-left:auto;font-size:12px;font-weight:600">${grp.filter(i=>checked[i.id]).length}/${grp.length}</span>`;
+    const ic=document.createElement('div');ic.className='cat-items';
+    grp.forEach(item=>{
+      const row=document.createElement('div');row.className='check-row'+(checked[item.id]?' done':'');
+      row.innerHTML=`<input type="checkbox" ${checked[item.id]?'checked':''} onchange="toggleCheck(${item.id},this.checked)"/>
+      <span class="cname">${item.name}${item.qty?' <span style="font-size:12px;opacity:.6">'+item.qty+(item.unit?' '+item.unit:'')+'</span>':''}</span>`;
+      ic.appendChild(row);
+    });
+    div.appendChild(hdr);div.appendChild(ic);sl.appendChild(div);
+  });
+}
+
+function gerarLink(){
+  const data=JSON.stringify({items,checked});
+  const encoded=btoa(unescape(encodeURIComponent(data)));
+  document.getElementById('share-url').textContent=encoded;
+  document.getElementById('share-out').style.display='';
+}
+
+function copyLink(){
+  const url=document.getElementById('share-url').textContent;
+  navigator.clipboard.writeText(url).then(()=>showToast('Copiado! Cole no WhatsApp.')).catch(()=>{
+    const t=document.createElement('textarea');t.value=url;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('Copiado!');
+  });
+}
+
+function shareWhatsApp(){
+  const code=document.getElementById('share-url').textContent;
+  const msg='Abra o arquivo lista-supermercado.html, vá em Compartilhar → Importar lista e cole este código:\n\n'+code;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg));
+}
+
+function showImport(){
+  document.getElementById('import-area').style.display='block';
+}
+
+function importarLista(){
+  const code=document.getElementById('import-input').value.trim();
+  if(!code){showToast('Cole o código primeiro');return}
+  try{
+    const data=JSON.parse(decodeURIComponent(escape(atob(code))));
+    items=data.items||[];checked=data.checked||{};
+    save();renderAll();
+    document.getElementById('import-area').style.display='none';
+    document.getElementById('import-input').value='';
+    document.getElementById('import-banner').style.display='block';
+    sw('comprar');
+    showToast('Lista importada com sucesso!');
+  }catch(e){showToast('Código inválido. Tente novamente.');}
+}
+
+function sw(t){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['editar','comprar','compartilhar'][i]===t));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+}
+
+buildSel('cat-sel');load();renderAll();
+</script>
+</body>
+</html>
